@@ -20,20 +20,24 @@ public class Person {
 
 
 
+      //Contructor por defecto
 
-    //Constructor
+    public Person() {
+        this(null, null);
+    }
+
+
     public Person(String firstName, String lastName) {
         this.firstName = new SimpleStringProperty(firstName);
         this.lastName = new SimpleStringProperty(lastName);
 
-        //Inicalizar algunos datos
+        // Algunos datos ficticios iniciales, solo para pruebas convenientes.
         this.street = new SimpleStringProperty("some street");
         this.postalCode = new SimpleIntegerProperty(1234);
         this.city = new SimpleStringProperty("some city");
         this.birthday = new SimpleObjectProperty<LocalDate>(LocalDate.of(1999, 2, 21));
     }
 
-    //Getters and Setters
     public String getFirstName() {
         return firstName.get();
     }

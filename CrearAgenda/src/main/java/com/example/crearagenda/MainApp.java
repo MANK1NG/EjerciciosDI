@@ -6,8 +6,10 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class MainApp extends Application {
@@ -43,6 +45,10 @@ public class MainApp extends Application {
         this.primaryStage = primaryStage;
         this.primaryStage.setTitle("AddressApp");
 
+        // Set the application icon.
+        //TODO
+        Image image = new Image("file:src/main/resources/images/com.example.crearagenda/Agenda.png");
+        primaryStage.getIcons().add(image);
         initRootLayout();
 
         showPersonOverview();
@@ -80,7 +86,35 @@ public class MainApp extends Application {
             e.printStackTrace();
         }
     }
+    public boolean showPersonEditDialog(Person person) {
+        try {
+            // Cargue el archivo fxml y cree una nueva etapa para el cuadro de diálogo emergente.
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(MainApp.class.getResource("PersonEditDialog.fxml"));
+            AnchorPane page = (AnchorPane) loader.load();
 
+            // Crear el escenario del diálogo.
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Edit Person");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(primaryStage);
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+
+            // Establecer la persona en el controlador.
+            PersonEditDialogController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            controller.setPerson(person);
+
+            // Mostrar el cuadro de diálogo y esperar hasta que el usuario lo cierre.
+            dialogStage.showAndWait();
+
+            return controller.isOkClicked();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
     //retorna el ecenario
     public Stage getPrimaryStage() {
         return primaryStage;
