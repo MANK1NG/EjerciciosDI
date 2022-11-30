@@ -1,16 +1,23 @@
 package com.example.crearagenda;
+import java.io.File;
 import java.io.IOException;
 
+import java.util.prefs.Preferences;
+
+import com.example.crearagenda.model.PersonListWrapper;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+
+import javax.xml.bind.*;
 
 public class MainApp extends Application {
 
@@ -45,7 +52,7 @@ public class MainApp extends Application {
         this.primaryStage = primaryStage;
         this.primaryStage.setTitle("AddressApp");
 
-        // Set the application icon.
+        // Poner el codigo
         //TODO
         Image image = new Image("file:src/main/resources/images/com.example.crearagenda/Agenda.png");
         primaryStage.getIcons().add(image);
@@ -64,6 +71,10 @@ public class MainApp extends Application {
             // Mostrar la escena del root
             Scene scene = new Scene(rootLayout);
             primaryStage.setScene(scene);
+
+            RootLayoutController controller = loader.getController();
+            controller.setMainApp(this);
+
             primaryStage.show();
         } catch (IOException e) {
             e.printStackTrace();
@@ -118,6 +129,84 @@ public class MainApp extends Application {
     //retorna el ecenario
     public Stage getPrimaryStage() {
         return primaryStage;
+    }
+
+    public File getPersonFilePath() {
+       Preferences prefs = Preferences.userNodeForPackage(MainApp.class);
+        //Creo una variable de tipo caracter que obtenga la ruta del fichero
+        String filePath = prefs.get("filePath", null);
+        //If para devolver ruta en ell caso de haber fichero
+
+        if (filePath != null) {
+            return new File(filePath);
+        } else {
+            return null;
+        }
+    }
+
+    public void setPersonFilePath(File file) {
+        Preferences prefs = Preferences.userNodeForPackage(MainApp.class);
+        if (file != null) {
+            prefs.put("filePath", file.getPath());
+
+            // Cambia el titulo del escenario
+            primaryStage.setTitle("AddressApp - " + file.getName());
+        } else {
+            prefs.remove("filePath");
+
+            // Cambia el titulo del escenario
+            primaryStage.setTitle("AddressApp");
+        }
+    }
+
+    public void loadPersonDataFromFile(File file) {
+        try {
+            JAXBContext context = JAXBContext
+                    .newInstance(PersonListWrapper.class);
+            Unmarshaller um = context.createUnmarshaller();
+
+            // Lectura de XML del archivo y desagregación.
+            PersonListWrapper wrapper = (PersonListWrapper) um.unmarshal(file);
+
+            personData.clear();
+            personData.addAll(wrapper.getPersons());
+
+            // Guarde la ruta del archivo en el registro.
+            setPersonFilePath(file);
+
+        } catch (Exception e) { // captura cualquier excepción
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("No se pudieron cargar los datos");
+            alert.setContentText("No se pudieron cargar los datos del archivo:\n" + file.getPath());
+
+            alert.showAndWait();
+        }
+    }
+
+    public void savePersonDataToFile(File file) {
+        try {
+            JAXBContext context = JAXBContext.newInstance(PersonListWrapper.class);
+            Marshaller m = context.createMarshaller();
+            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+
+            // Envolviendo los datos de nuestra persona.
+            PersonListWrapper wrapper = new PersonListWrapper();
+            wrapper.setPersons(personData);
+
+            // Ordenar y guardar XML en el archivo.
+            m.marshal(wrapper, file);
+
+            //Guarde la ruta del archivo en el registro.
+            setPersonFilePath(file);
+        } catch (Exception  e) { // captura cualquier excepción
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("No se ha podido guardar");
+            alert.setContentText("No se pudieron cargar los datos del archivo:\n" + file.getPath());
+
+            alert.showAndWait();
+        }
     }
 
     public static void main(String[] args) {
